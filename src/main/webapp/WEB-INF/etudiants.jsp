@@ -51,28 +51,5 @@
 	        <br />
 			<input type="submit" name="ajouterCsv" value="Ajouter liste etudiant">
 		</form>
-		
-		<br />
-		<hr />
-		<br /> 
-		
-		<c:if test="${ !listeEtudiants.isEmpty() }">
-			<ul>
-				<c:forEach items="${ listeEtudiants }" var="i">
-					<c:if test="${ i.getNumeroEquipe() == -1 }">
-						<li>
-							<p> 
-								<c:out value="${ i.getPrenom() }" /> 
-								<c:out value="${ i.getNom().toUpperCase() }" /> 
-								<c:out value="(${ i.getGenre() })" />
-								 - 
-								<c:out value="${ i.getFormationPrecedente() }" />
-								<c:out value="${ i.getSitePrecedent() }" />
-							</p>
-						</li>
-					</c:if> 
-				</c:forEach>
-			</ul>
-		</c:if>
 	</body>
 </html>

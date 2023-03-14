@@ -1,18 +1,23 @@
 package fr.atw.servlets;
 
 import java.io.IOException;
+import java.util.List;
 
 import fr.atw.beans.Equipe;
+import fr.atw.beans.Etudiant;
 import fr.atw.dao.DaoFactory;
 import fr.atw.dao.EquipeDao;
 import fr.atw.dao.EtudiantDao;
 import fr.atw.formulaires.FormulaireInsertionEtudiant;
+import fr.atw.outils.EnregistreurFichier;
 import fr.atw.outils.GenerateurEquipes;
+import fr.atw.outils.LecteurCSV;
 import fr.atw.formulaires.FormulaireModificationEquipe;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 
 public class Etudiants extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -98,6 +103,24 @@ public class Etudiants extends HttpServlet {
 			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
 			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else {
+			Part part = request.getPart("fichier");
+			
+			String path = this.getServletContext().getRealPath("/WEB-INF/ressources");
+			EnregistreurFichier enregistreur = new EnregistreurFichier(part, path);
+			if(!enregistreur.getNomFichier().isEmpty()) {
+				enregistreur.ecrireFichier();
+				LecteurCSV lecteurCsv = new LecteurCSV(path + "\\" + enregistreur.getNomFichier());
+				List<List<String>> output = lecteurCsv.getOutput();
+				for(int i=0; i<output.size(); i++) {
+					if(output.get(i).size() == 5) {
+						
+						this.etudiantDao.ajouter(new Etudiant(this.etudiantDao.getListeEtudiants().size()+1, output.get(i).get(0), output.get(i).get(1), output.get(i).get(2), output.get(i).get(3), output.get(i).get(4)));
+					}
+				}
+			}
+			this.getServletContext().getRequestDispatcher("/WEB-INF/etudiants.jsp").forward(request, response);
+
 		}
 
 		
