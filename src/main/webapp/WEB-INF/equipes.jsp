@@ -22,7 +22,8 @@
 		<div>
 			<form method="post" action="etudiants">
 				<input type="submit" name="submitEquipesAleatoire" value="Générer aléatoirement des équipes"/>
-			</form>			
+			</form>	
+			<p style="color:red;"><c:out value="${ erreurGenererEquipes }" /></p>		
 		</div>
 		
 		<br />
