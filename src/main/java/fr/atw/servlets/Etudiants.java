@@ -58,8 +58,11 @@ public class Etudiants extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		if(request.getParameter("ajouterEtudiant") != null) {
 			FormulaireInsertionEtudiant formulaireInsertionEtudiant = new FormulaireInsertionEtudiant();
-			formulaireInsertionEtudiant.verifierEtudiant(this.etudiantDao, request, this.etudiantDao.getListeEtudiants().size()+1);
+			String erreurInsertionEtudiant = formulaireInsertionEtudiant.verifierEtudiant(this.etudiantDao, request, this.etudiantDao.getListeEtudiants().size()+1);
 			
+			if(erreurInsertionEtudiant != "") {
+				request.setAttribute("erreurInsertionEtudiant", erreurInsertionEtudiant);
+			}
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
 			
 			this.getServletContext().getRequestDispatcher("/WEB-INF/etudiants.jsp").forward(request, response);
@@ -88,10 +91,17 @@ public class Etudiants extends HttpServlet {
 			
 			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
 		} else if(request.getParameter("submitEquipesAleatoire") != null) {
-			if(this.etudiantDao.getListeEtudiants().size() >= this.equipeDao.getListeEquipe().size()) {
+			String erreurGenererEquipes = "";
+			if(this.equipeDao.getListeEquipe().size() <= 0) {
+				erreurGenererEquipes = "Aucunes équipes existantes.";
+			}
+			else if(this.etudiantDao.getListeEtudiants().size() >= this.equipeDao.getListeEquipe().size()) {
 				GenerateurEquipes generateurEquipes = new GenerateurEquipes(this.etudiantDao.getListeEtudiants(), this.equipeDao.getListeEquipe(), this.etudiantDao);
 				generateurEquipes.genererEquipesAleatoire();
+			} else {
+				erreurGenererEquipes = "Il y a moins d'étudiants que d'équipes, génération impossible.";
 			}
+			request.setAttribute("erreurGenererEquipes", erreurGenererEquipes);
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
 			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 			
@@ -108,17 +118,25 @@ public class Etudiants extends HttpServlet {
 			
 			String path = this.getServletContext().getRealPath("/WEB-INF/ressources");
 			EnregistreurFichier enregistreur = new EnregistreurFichier(part, path);
+			String erreurImportCsv = "";
 			if(!enregistreur.getNomFichier().isEmpty()) {
 				enregistreur.ecrireFichier();
 				LecteurCSV lecteurCsv = new LecteurCSV(path + "\\" + enregistreur.getNomFichier());
 				List<List<String>> output = lecteurCsv.getOutput();
 				for(int i=0; i<output.size(); i++) {
 					if(output.get(i).size() == 5) {
-						
+						erreurImportCsv = "Fichier CSV correctement importé !";
 						this.etudiantDao.ajouter(new Etudiant(this.etudiantDao.getListeEtudiants().size()+1, output.get(i).get(0), output.get(i).get(1), output.get(i).get(2), output.get(i).get(3), output.get(i).get(4)));
 					}
+					else {
+						erreurImportCsv = "Format de CSV incompatible";
+						break;
+					}
 				}
+			} else {
+				erreurImportCsv = "Veuillez importer un fichier CSV";
 			}
+			request.setAttribute("erreurImportCsv", erreurImportCsv);
 			this.getServletContext().getRequestDispatcher("/WEB-INF/etudiants.jsp").forward(request, response);
 
 		}

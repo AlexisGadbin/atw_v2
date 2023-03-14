@@ -7,17 +7,24 @@ import jakarta.servlet.http.HttpServletRequest;
 public class FormulaireInsertionEtudiant {
 	private Etudiant etudiant;
 
-	public void verifierEtudiant(EtudiantDao etudiantDao, HttpServletRequest request, int id) {
+	public String verifierEtudiant(EtudiantDao etudiantDao, HttpServletRequest request, int id) {
 		String nom = request.getParameter("nom");
 		String prenom = request.getParameter("prenom");
 		String genre = request.getParameter("genre");
 		String sitePrecedent = request.getParameter("sitePrecedent");
 		String formationPrecedente = request.getParameter("formationPrecedente");
 		
-		if(nom != "" && prenom != "") {
+		String  message = "";
+		if(nom == "") {
+			message = "Le nom ne peut pas être vide";
+		} else if (prenom == "") {
+			message = "Le prenom ne peut pas être vide";
+		} else {
 			Etudiant etudiant = new Etudiant(id, nom, prenom, genre, sitePrecedent, formationPrecedente);
-			etudiantDao.ajouter(etudiant);		
+			etudiantDao.ajouter(etudiant);	
 		}
+		
+		return message;
 
 	}
 	

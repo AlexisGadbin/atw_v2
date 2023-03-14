@@ -40,6 +40,11 @@
 			<input type="submit" name="ajouterEtudiant" value="Ajouter etudiant"/>
 		</form>
 		
+		<c:if test="${ erreurInsertionEtudiant != null }">
+			<br />
+			<p style="color:red"> <c:out value="${ erreurInsertionEtudiant }" /></p>
+		</c:if>
+		
 		<br />
 		<hr />
 		<br />
@@ -50,6 +55,7 @@
 	        <br />
 	        <br />
 			<input type="submit" name="ajouterCsv" value="Ajouter liste etudiant">
+			<p style="color:red;"><c:out value="${ erreurImportCsv }"></c:out></p>
 		</form>
 	</body>
 </html>
