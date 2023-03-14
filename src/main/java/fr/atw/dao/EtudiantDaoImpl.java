@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.atw.beans.Equipe;
 import fr.atw.beans.Etudiant;
 
 public class EtudiantDaoImpl implements EtudiantDao{
@@ -76,6 +77,84 @@ public class EtudiantDaoImpl implements EtudiantDao{
 				String formationPrecedente = resultat.getString("formationPrecedente");
 				String sitePrecedent = resultat.getString("sitePrecedent");
 				int numeroEquipe = resultat.getInt("numeroEquipe");
+
+				
+				Etudiant etudiant = new Etudiant(id, nom, prenom, genre, formationPrecedente, sitePrecedent);
+				if(numeroEquipe > 0) {
+					etudiant.setNumeroEquipe(numeroEquipe);
+				}
+				
+				listeEtudiants.add(etudiant);
+			}
+		} catch ( SQLException e) {
+			e.printStackTrace();
+		} 
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return listeEtudiants;
+	}
+
+	@Override
+	public void changerEquipe(Etudiant etudiant, Equipe equipe) {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try {
+			connection = daoFactory.getConnection();
+			preparedStatement = connection.prepareStatement("UPDATE Etudiant SET numeroEquipe = ? WHERE id = ?");
+			
+			preparedStatement.setInt(1, equipe.getNumero());
+			preparedStatement.setInt(2, etudiant.getId());
+
+			preparedStatement.executeUpdate();
+			connection.commit();
+		} catch (SQLException e1) {
+			try {
+				if(connection != null) {
+					connection.rollback();
+				}
+			} catch (SQLException e2) {
+				e2.printStackTrace();
+			}
+		} 
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+	@Override
+	public List<Etudiant> getListeEtudiantsParEquipe(Equipe equipe) {
+		List<Etudiant> listeEtudiants = new ArrayList<Etudiant>();
+		Connection connection = null;
+		Statement statement = null;
+		ResultSet resultat = null;
+		
+		try {
+			connection = daoFactory.getConnection();
+			statement = connection.createStatement();
+			resultat = statement.executeQuery("SELECT * FROM Etudiant WHERE numeroEquipe = " + equipe.getNumero());
+			
+			while (resultat.next()) {
+				int id = resultat.getInt("id");
+				String nom = resultat.getString("nom");
+				String prenom = resultat.getString("prenom");
+				String genre = resultat.getString("genre");
+				String formationPrecedente = resultat.getString("formationPrecedente");
+				String sitePrecedent = resultat.getString("sitePrecedent");
 				
 				Etudiant etudiant = new Etudiant(id, nom, prenom, genre, formationPrecedente, sitePrecedent);
 				
@@ -95,5 +174,69 @@ public class EtudiantDaoImpl implements EtudiantDao{
 		}
 		return listeEtudiants;
 	}
+
+	@Override
+	public void supprimerEquipes() {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try {
+			connection = daoFactory.getConnection();
+			preparedStatement = connection.prepareStatement("UPDATE Etudiant SET numeroEquipe = null WHERE 1=1");
+			
+
+			preparedStatement.executeUpdate();
+			connection.commit();
+		} catch (SQLException e1) {
+			try {
+				if(connection != null) {
+					connection.rollback();
+				}
+			} catch (SQLException e2) {
+				e2.printStackTrace();
+			}
+		} 
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 	
+	@Override
+	public void supprimerEquipesAvecId(Equipe equipe) {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try {
+			connection = daoFactory.getConnection();
+			preparedStatement = connection.prepareStatement("UPDATE Etudiant SET numeroEquipe = null WHERE numeroEquipe=?");
+			preparedStatement.setInt(1, equipe.getNumero());
+			
+
+			preparedStatement.executeUpdate();
+			connection.commit();
+		} catch (SQLException e1) {
+			try {
+				if(connection != null) {
+					connection.rollback();
+				}
+			} catch (SQLException e2) {
+				e2.printStackTrace();
+			}
+		} 
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

@@ -7,6 +7,7 @@ import fr.atw.dao.DaoFactory;
 import fr.atw.dao.EquipeDao;
 import fr.atw.dao.EtudiantDao;
 import fr.atw.formulaires.FormulaireInsertionEtudiant;
+import fr.atw.outils.GenerateurEquipes;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -64,11 +65,13 @@ public class Etudiants extends HttpServlet {
 				if(diff > 0 ) {
 					for(int i = 0; i<diff; i++) {
 						Equipe equipe = new Equipe(this.equipeDao.getListeEquipe().size()+1, "Equipe "+Integer.toString(this.equipeDao.getListeEquipe().size()+1));
+						equipe.setEtudiants(this.etudiantDao.getListeEtudiantsParEquipe(equipe));
 						this.equipeDao.ajouter(equipe);
 					}
 				} else if (diff < 0){
 					for(int i=0; i< Math.abs(diff); i++) {
 						//this.listeEquipes.get(this.listeEquipes.size()-1).viderEquipe(); TODO IN BDD
+						this.etudiantDao.supprimerEquipesAvecId(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
 						this.equipeDao.supprimer(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
 					}	
 				}
@@ -77,6 +80,14 @@ public class Etudiants extends HttpServlet {
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
 			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 			
+			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else if(request.getParameter("submitEquipesAleatoire") != null) {
+			if(this.etudiantDao.getListeEtudiants().size() >= this.equipeDao.getListeEquipe().size()) {
+				GenerateurEquipes generateurEquipes = new GenerateurEquipes(this.etudiantDao.getListeEtudiants(), this.equipeDao.getListeEquipe(), this.etudiantDao);
+				generateurEquipes.genererEquipesAleatoire();
+			}
+			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
 		}
 
