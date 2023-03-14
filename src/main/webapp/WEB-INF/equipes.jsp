@@ -63,15 +63,14 @@
 						<form method="post" action="etudiants">
 							<input name="numeroEquipe" value="${ equipe.getNumero() }" hidden />
 							<input style="font-weight:bold;" type="text" name="nomEquipe" id="nomEquipe" value="<c:out value="${ equipe.getNom() }" />"> 
-	
-							<c:if test="${ listeEquipes.size() > i }">
-								<c:forEach items="${ equipe.getEtudiants() }" var="etudiant">
-									<p> 
-										<c:out value="${ etudiant.getNom().toUpperCase() }  ${ etudiant.getPrenom() }" /> 
-										<button type="submit" name="supprimerEtudiant" value="${etudiant.getId()}">X</button>
-									</p>
+								<c:forEach items="${ listeEtudiants }" var="etudiant">
+									<c:if test="${etudiant.getNumeroEquipe() == equipe.getNumero()}">
+										<p> 
+											<c:out value="${ etudiant.getNom().toUpperCase() }  ${ etudiant.getPrenom() }" /> 
+											<button type="submit" name="supprimerEtudiant" value="${etudiant.getId()}">X</button>
+										</p>
+									</c:if>
 								</c:forEach>
-							</c:if>
 							<c:if test="${ equipe.getEtudiants().size() < 1 }">
 								<br>
 								<br>
