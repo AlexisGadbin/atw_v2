@@ -8,6 +8,7 @@ import fr.atw.dao.EquipeDao;
 import fr.atw.dao.EtudiantDao;
 import fr.atw.formulaires.FormulaireInsertionEtudiant;
 import fr.atw.outils.GenerateurEquipes;
+import fr.atw.formulaires.FormulaireModificationEquipe;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -87,6 +88,10 @@ public class Etudiants extends HttpServlet {
 				generateurEquipes.genererEquipesAleatoire();
 			}
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+		} else if (request.getParameter("validerEquipe") != null) {
+			FormulaireModificationEquipe formulaireModificationEquipe = new FormulaireModificationEquipe();
+			formulaireModificationEquipe.modifierEquipe(this.equipeDao, this.etudiantDao.getListeEtudiants(), request);
+
 			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
 		}

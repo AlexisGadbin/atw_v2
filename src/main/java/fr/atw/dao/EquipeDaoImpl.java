@@ -122,4 +122,38 @@ public class EquipeDaoImpl implements EquipeDao {
 		
 	}
 
+	@Override
+	public void changerNom(Equipe equipe, String nom) {
+		Connection connection = null;
+		PreparedStatement preparedStatement = null;
+		
+		try {
+			connection = daoFactory.getConnection();
+			preparedStatement = connection.prepareStatement("UPDATE Equipe SET nom = ? WHERE Equipe.numero = ?");
+			
+			preparedStatement.setString(1, nom);
+			preparedStatement.setInt(2, equipe.getNumero());
+			preparedStatement.executeUpdate();
+			connection.commit();
+		} catch (SQLException e1) {
+			try {
+				if(connection != null) {
+					connection.rollback();
+				}
+			} catch (SQLException e2) {
+				e2.printStackTrace();
+			}
+		} 
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
 }
