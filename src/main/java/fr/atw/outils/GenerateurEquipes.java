@@ -70,7 +70,7 @@ public class GenerateurEquipes {
 				random.add(randomInt);
 				
 				Etudiant etudiant = this.etudiants.get(randomInt);
-				this.etudiantDao.changerEquipe(etudiant, equipe);
+				this.etudiantDao.changerEquipe(etudiant, equipe.getNumero());
 				equipe.ajouterEtudiant(etudiant);
 				
 			}
@@ -79,7 +79,7 @@ public class GenerateurEquipes {
 		for(int i=0; i < nbEtudiantsRestant; i++) {
 			for(int j=0; j < this.etudiants.size(); j++) {
 				if(!random.contains(j)) {
-					this.etudiantDao.changerEquipe(this.etudiants.get(j), this.equipes.get(i));
+					this.etudiantDao.changerEquipe(this.etudiants.get(j), this.equipes.get(i).getNumero());
 					this.equipes.get(i).ajouterEtudiant(this.etudiants.get(j));
 					this.etudiants.get(j).setNumeroEquipe(i+1);
 					random.add(j);

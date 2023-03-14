@@ -5,16 +5,20 @@ import java.util.List;
 import fr.atw.beans.Equipe;
 import fr.atw.beans.Etudiant;
 import fr.atw.dao.EquipeDao;
+import fr.atw.dao.EtudiantDao;
 import jakarta.servlet.http.HttpServletRequest;
 
 public class FormulaireModificationEquipe {
 	Equipe equipe;
+	Etudiant etudiant;
 	EquipeDao equipeDao;
 	List<Etudiant> listeEtudiants;
+	EtudiantDao etudiantDao;
 	
-	public void modifierEquipe(EquipeDao equipeDao, List<Etudiant> listeEtudiants, HttpServletRequest requete) {
-		this.listeEtudiants = listeEtudiants;
+	public void modifierEquipe(EquipeDao equipeDao, EtudiantDao etudiantDao, HttpServletRequest requete) {
+		this.listeEtudiants = etudiantDao.getListeEtudiants();
 		this.equipeDao = equipeDao;
+		this.etudiantDao = etudiantDao;
 
 		
 		int numeroEquipe = Integer.parseInt(requete.getParameter("numeroEquipe"));
@@ -27,21 +31,27 @@ public class FormulaireModificationEquipe {
 				this.equipe = e;
 			}
 		}
+		if(idEtudiantASupprimer != null) {
+			for(Etudiant e : etudiantDao.getListeEtudiants()) {
+				if(e.getId() == Integer.parseInt(idEtudiantASupprimer) ) {
+					this.etudiant = e;
+				}
+			}
+		}
+
 		
-		System.out.println(nouvelEtudiant);
 		
 		if(idEtudiantASupprimer != null) {
-//			Etudiant etudiant = this.equipe.getEtudiant(Integer.parseInt(idEtudiantASupprimer));
-//			if(etudiant != null) {
-//				this.equipe.supprimerEtudiant(etudiant);
-//			}
+			if(this.etudiant != null) {
+				this.etudiantDao.changerEquipe(this.etudiant, -1);
+			}
 		} else if (!nouvelEtudiant.equals("null")) {
-//			System.out.println("ca rentre");
-//			for(Etudiant e : this.listeEtudiants) {
-//				if(e.getId() == Integer.parseInt(nouvelEtudiant)) {
-//					this.equipe.ajouterEtudiant(e);
-//				}
-//			}
+			for(Etudiant e : etudiantDao.getListeEtudiants()) {
+				if(e.getId() == Integer.parseInt(nouvelEtudiant) ) {
+					this.etudiant = e;
+				}
+			}
+			this.etudiantDao.changerEquipe(this.etudiant, numeroEquipe);
 		} else if (!nomEquipe.equals(this.equipe.getNom())) {
 			this.equipeDao.changerNom(equipe, nomEquipe);
 		} 

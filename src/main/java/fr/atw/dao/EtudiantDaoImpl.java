@@ -102,15 +102,16 @@ public class EtudiantDaoImpl implements EtudiantDao{
 	}
 
 	@Override
-	public void changerEquipe(Etudiant etudiant, Equipe equipe) {
+	public void changerEquipe(Etudiant etudiant, int numeroEquipe) {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
+		String numEquipe = numeroEquipe == -1 ? null : Integer.toString(numeroEquipe);
 		
 		try {
 			connection = daoFactory.getConnection();
 			preparedStatement = connection.prepareStatement("UPDATE Etudiant SET numeroEquipe = ? WHERE id = ?");
 			
-			preparedStatement.setInt(1, equipe.getNumero());
+			preparedStatement.setString(1, numEquipe);
 			preparedStatement.setInt(2, etudiant.getId());
 
 			preparedStatement.executeUpdate();
