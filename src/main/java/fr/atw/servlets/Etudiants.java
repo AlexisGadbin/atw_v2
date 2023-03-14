@@ -88,11 +88,15 @@ public class Etudiants extends HttpServlet {
 				generateurEquipes.genererEquipesAleatoire();
 			}
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
-		} else if (request.getParameter("validerEquipe") != null) {
+			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
+			
+			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else if (request.getParameter("validerEquipe") != null || request.getParameter("supprimerEtudiant") != null) {
 			FormulaireModificationEquipe formulaireModificationEquipe = new FormulaireModificationEquipe();
-			formulaireModificationEquipe.modifierEquipe(this.equipeDao, this.etudiantDao.getListeEtudiants(), request);
+			formulaireModificationEquipe.modifierEquipe(this.equipeDao, this.etudiantDao, request);
 
 			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
+			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
 			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
 		}
 
