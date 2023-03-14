@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.atw.beans.Equipe;
-import fr.atw.beans.Etudiant;
 
 public class EquipeDaoImpl implements EquipeDao {
 	
@@ -154,6 +153,48 @@ public class EquipeDaoImpl implements EquipeDao {
 			}
 		}
 		
+	}
+
+	@Override
+	public List<List<String>> getEquipesCsv() {
+		List<List<String>> listeEquipesCsv = new ArrayList<List<String>>();
+		Connection connection = null;
+		Statement statement = null;
+		ResultSet resultat = null;
+		
+		try {
+			connection = daoFactory.getConnection();
+			statement = connection.createStatement();
+			resultat = statement.executeQuery("SELECT e.nom as nomEquipe, u.nom as nomUtilisateur, u.prenom, u.genre, u.formationPrecedente, u.sitePrecedent "
+					+ "							FROM Etudiant u, Equipe e"
+					+ "							WHERE u.numeroEquipe = e.numero"
+					+ "							ORDER BY e.numero");
+			
+			while (resultat.next()) {
+				List<String> ligne = new ArrayList<String>();
+				
+				ligne.add(resultat.getString("nomEquipe"));
+				ligne.add(resultat.getString("nomUtilisateur"));
+				ligne.add(resultat.getString("prenom"));
+				ligne.add(resultat.getString("genre"));
+				ligne.add(resultat.getString("formationPrecedente"));
+				ligne.add(resultat.getString("sitePrecedent"));
+				
+				listeEquipesCsv.add(ligne);
+			}
+		} catch ( SQLException e) {
+			e.printStackTrace();
+		} 
+		finally {
+			try {
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return listeEquipesCsv;
 	}
 
 }

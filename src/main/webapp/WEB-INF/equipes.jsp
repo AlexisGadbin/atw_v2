@@ -100,7 +100,10 @@
 		<br />
 		
 		<h3>Exporter les équipes : </h3>
-		<button type="button"> Exporter les équipes </button>
+		<form method="post" action="etudiants">
+			<button type="submit" name="exporterCsv"> Exporter les équipes </button>
+		</form>
+		
 		
 		
 	</body>

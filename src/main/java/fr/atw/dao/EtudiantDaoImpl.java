@@ -138,7 +138,7 @@ public class EtudiantDaoImpl implements EtudiantDao{
 	}
 
 	@Override
-	public List<Etudiant> getListeEtudiantsParEquipe(Equipe equipe) {
+	public List<Etudiant> getListeEtudiantsEquipe(Equipe equipe) {
 		List<Etudiant> listeEtudiants = new ArrayList<Etudiant>();
 		Connection connection = null;
 		Statement statement = null;
@@ -177,7 +177,7 @@ public class EtudiantDaoImpl implements EtudiantDao{
 	}
 
 	@Override
-	public void supprimerEquipes() {
+	public void viderToutesLesEquipes() {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		
@@ -209,7 +209,7 @@ public class EtudiantDaoImpl implements EtudiantDao{
 	}
 	
 	@Override
-	public void supprimerEquipesAvecId(Equipe equipe) {
+	public void viderEquipe(Equipe equipe) {
 		Connection connection = null;
 		PreparedStatement preparedStatement = null;
 		

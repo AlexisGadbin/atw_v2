@@ -1,6 +1,9 @@
 package fr.atw.servlets;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import fr.atw.beans.Equipe;
@@ -9,10 +12,11 @@ import fr.atw.dao.DaoFactory;
 import fr.atw.dao.EquipeDao;
 import fr.atw.dao.EtudiantDao;
 import fr.atw.formulaires.FormulaireInsertionEtudiant;
+import fr.atw.formulaires.FormulaireModificationEquipe;
+import fr.atw.outils.EcritureCSV;
 import fr.atw.outils.EnregistreurFichier;
 import fr.atw.outils.GenerateurEquipes;
 import fr.atw.outils.LecteurCSV;
-import fr.atw.formulaires.FormulaireModificationEquipe;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -74,13 +78,13 @@ public class Etudiants extends HttpServlet {
 				if(diff > 0 ) {
 					for(int i = 0; i<diff; i++) {
 						Equipe equipe = new Equipe(this.equipeDao.getListeEquipe().size()+1, "Equipe "+Integer.toString(this.equipeDao.getListeEquipe().size()+1));
-						equipe.setEtudiants(this.etudiantDao.getListeEtudiantsParEquipe(equipe));
+						equipe.setEtudiants(this.etudiantDao.getListeEtudiantsEquipe(equipe));
 						this.equipeDao.ajouter(equipe);
 					}
 				} else if (diff < 0){
 					for(int i=0; i< Math.abs(diff); i++) {
 						//this.listeEquipes.get(this.listeEquipes.size()-1).viderEquipe(); TODO IN BDD
-						this.etudiantDao.supprimerEquipesAvecId(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
+						this.etudiantDao.viderEquipe(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
 						this.equipeDao.supprimer(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
 					}	
 				}
@@ -113,9 +117,45 @@ public class Etudiants extends HttpServlet {
 			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
 			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else if(request.getParameter("exporterCsv") != null) {
+			String nomFichier = "equipes.csv";
+			
+	        FileInputStream fileInputStream = null;
+	        OutputStream responseOutputStream = null;
+	        try
+	        {
+	            String filePath = request.getServletContext().getRealPath("/WEB-INF/ressources/")+ nomFichier;
+				EcritureCSV ecritureCsv = new EcritureCSV(filePath);
+				ecritureCsv.ecrireCsv(this.equipeDao.getEquipesCsv());
+				File file = ecritureCsv.getFile();
+	            
+	            String mimeType = request.getServletContext().getMimeType(filePath);
+	            if (mimeType == null) {        
+	                mimeType = "application/octet-stream";
+	            }
+	            response.setContentType(mimeType);
+	            response.addHeader("Content-Disposition", "attachment; filename=" + nomFichier);
+	            response.setContentLength((int) file.length());
+	 
+	            fileInputStream = new FileInputStream(file);
+	            responseOutputStream = response.getOutputStream();
+	            int bytes;
+	            while ((bytes = fileInputStream.read()) != -1) {
+	                responseOutputStream.write(bytes);
+	            }
+	        }
+	        catch(Exception ex)
+	        {
+	            ex.printStackTrace();
+	        }
+	        finally
+	        {
+	            fileInputStream.close();
+	            responseOutputStream.close();
+	        }
+	        
 		} else {
 			Part part = request.getPart("fichier");
-			
 			String path = this.getServletContext().getRealPath("/WEB-INF/ressources");
 			EnregistreurFichier enregistreur = new EnregistreurFichier(part, path);
 			String erreurImportCsv = "";

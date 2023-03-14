@@ -9,4 +9,5 @@ public interface EquipeDao {
 	void supprimer(Equipe equipe);
 	void changerNom(Equipe equipe, String nom);
 	List<Equipe> getListeEquipe();
+	List<List<String>> getEquipesCsv();
 }

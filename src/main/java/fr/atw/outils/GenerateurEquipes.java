@@ -40,7 +40,7 @@ public class GenerateurEquipes {
 		
 		ArrayList<Integer> random = new ArrayList<Integer>();
 		
-		this.etudiantDao.supprimerEquipes();
+		this.etudiantDao.viderToutesLesEquipes();
 		
 //		for(int i=0; i < this.nbEquipes; i++)
 //		{
