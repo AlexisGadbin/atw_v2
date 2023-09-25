@@ -1,20 +1,43 @@
 package fr.atw.servlets;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+
+import fr.atw.beans.Equipe;
+import fr.atw.beans.Etudiant;
+import fr.atw.dao.DaoFactory;
+import fr.atw.dao.EquipeDao;
+import fr.atw.dao.EtudiantDao;
+import fr.atw.formulaires.FormulaireInsertionEtudiant;
+import fr.atw.formulaires.FormulaireModificationEquipe;
+import fr.atw.outils.EcritureCSV;
+import fr.atw.outils.EnregistreurFichier;
+import fr.atw.outils.GenerateurEquipes;
+import fr.atw.outils.LecteurCSV;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import jakarta.servlet.http.Part;
 
 public class Etudiants extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
-    public Etudiants() {
-        super();
-    }
+	private EtudiantDao etudiantDao;
+	private EquipeDao equipeDao;
+	
+	public void init() throws ServletException {
+		DaoFactory daoFactory = DaoFactory.getInstance();
+		this.etudiantDao = daoFactory.getEtudiantDao();
+		this.equipeDao = daoFactory.getEquipeDao();
+	}
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+		request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
 		String page;
 		
         if (request.getParameterMap().containsKey("page")) {
@@ -37,7 +60,128 @@ public class Etudiants extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		doGet(request, response);
+		if(request.getParameter("ajouterEtudiant") != null) {
+			FormulaireInsertionEtudiant formulaireInsertionEtudiant = new FormulaireInsertionEtudiant();
+			String erreurInsertionEtudiant = formulaireInsertionEtudiant.verifierEtudiant(this.etudiantDao, request, this.etudiantDao.getListeEtudiants().size()+1);
+			
+			if(erreurInsertionEtudiant != "") {
+				request.setAttribute("erreurInsertionEtudiant", erreurInsertionEtudiant);
+			}
+			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+			
+			this.getServletContext().getRequestDispatcher("/WEB-INF/etudiants.jsp").forward(request, response);
+		} else if(request.getParameter("submitNbEquipes") != null) {
+			if(request.getParameter("nbEquipe") != "")
+			{
+				int diff = Integer.parseInt(request.getParameter("nbEquipe")) - this.equipeDao.getListeEquipe().size();
+				
+				if(diff > 0 ) {
+					for(int i = 0; i<diff; i++) {
+						Equipe equipe = new Equipe(this.equipeDao.getListeEquipe().size()+1, "Equipe "+Integer.toString(this.equipeDao.getListeEquipe().size()+1));
+						equipe.setEtudiants(this.etudiantDao.getListeEtudiantsEquipe(equipe));
+						this.equipeDao.ajouter(equipe);
+					}
+				} else if (diff < 0){
+					for(int i=0; i< Math.abs(diff); i++) {
+						//this.listeEquipes.get(this.listeEquipes.size()-1).viderEquipe(); TODO IN BDD
+						this.etudiantDao.viderEquipe(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
+						this.equipeDao.supprimer(this.equipeDao.getListeEquipe().get(this.equipeDao.getListeEquipe().size()-1));
+					}	
+				}
+
+			}
+			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
+			
+			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else if(request.getParameter("submitEquipesAleatoire") != null) {
+			String erreurGenererEquipes = "";
+			if(this.equipeDao.getListeEquipe().size() <= 0) {
+				erreurGenererEquipes = "Aucunes équipes existantes.";
+			}
+			else if(this.etudiantDao.getListeEtudiants().size() >= this.equipeDao.getListeEquipe().size()) {
+				GenerateurEquipes generateurEquipes = new GenerateurEquipes(this.etudiantDao.getListeEtudiants(), this.equipeDao.getListeEquipe(), this.etudiantDao);
+				generateurEquipes.genererEquipesAleatoire();
+			} else {
+				erreurGenererEquipes = "Il y a moins d'étudiants que d'équipes, génération impossible.";
+			}
+			request.setAttribute("erreurGenererEquipes", erreurGenererEquipes);
+			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
+			
+			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else if (request.getParameter("validerEquipe") != null || request.getParameter("supprimerEtudiant") != null) {
+			FormulaireModificationEquipe formulaireModificationEquipe = new FormulaireModificationEquipe();
+			formulaireModificationEquipe.modifierEquipe(this.equipeDao, this.etudiantDao, request);
+
+			request.setAttribute("listeEquipes", this.equipeDao.getListeEquipe());
+			request.setAttribute("listeEtudiants", this.etudiantDao.getListeEtudiants());
+			this.getServletContext().getRequestDispatcher("/WEB-INF/equipes.jsp").forward(request, response);
+		} else if(request.getParameter("exporterCsv") != null) {
+			String nomFichier = "equipes.csv";
+			
+	        FileInputStream fileInputStream = null;
+	        OutputStream responseOutputStream = null;
+	        try
+	        {
+	            String filePath = request.getServletContext().getRealPath("/WEB-INF/ressources/")+ nomFichier;
+				EcritureCSV ecritureCsv = new EcritureCSV(filePath);
+				ecritureCsv.ecrireCsv(this.equipeDao.getEquipesCsv());
+				File file = ecritureCsv.getFile();
+	            
+	            String mimeType = request.getServletContext().getMimeType(filePath);
+	            if (mimeType == null) {        
+	                mimeType = "application/octet-stream";
+	            }
+	            response.setContentType(mimeType);
+	            response.addHeader("Content-Disposition", "attachment; filename=" + nomFichier);
+	            response.setContentLength((int) file.length());
+	 
+	            fileInputStream = new FileInputStream(file);
+	            responseOutputStream = response.getOutputStream();
+	            int bytes;
+	            while ((bytes = fileInputStream.read()) != -1) {
+	                responseOutputStream.write(bytes);
+	            }
+	        }
+	        catch(Exception ex)
+	        {
+	            ex.printStackTrace();
+	        }
+	        finally
+	        {
+	            fileInputStream.close();
+	            responseOutputStream.close();
+	        }
+	        
+		} else {
+			Part part = request.getPart("fichier");
+			String path = this.getServletContext().getRealPath("/WEB-INF/ressources");
+			EnregistreurFichier enregistreur = new EnregistreurFichier(part, path);
+			String erreurImportCsv = "";
+			if(!enregistreur.getNomFichier().isEmpty()) {
+				enregistreur.ecrireFichier();
+				LecteurCSV lecteurCsv = new LecteurCSV(path + "\\" + enregistreur.getNomFichier());
+				List<List<String>> output = lecteurCsv.getOutput();
+				for(int i=0; i<output.size(); i++) {
+					if(output.get(i).size() == 5) {
+						erreurImportCsv = "Fichier CSV correctement importé !";
+						this.etudiantDao.ajouter(new Etudiant(this.etudiantDao.getListeEtudiants().size()+1, output.get(i).get(0), output.get(i).get(1), output.get(i).get(2), output.get(i).get(3), output.get(i).get(4)));
+					}
+					else {
+						erreurImportCsv = "Format de CSV incompatible";
+						break;
+					}
+				}
+			} else {
+				erreurImportCsv = "Veuillez importer un fichier CSV";
+			}
+			request.setAttribute("erreurImportCsv", erreurImportCsv);
+			this.getServletContext().getRequestDispatcher("/WEB-INF/etudiants.jsp").forward(request, response);
+
+		}
+
+		
 	}
 
 }
